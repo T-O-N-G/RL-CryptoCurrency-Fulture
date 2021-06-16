@@ -23,7 +23,7 @@ class TradingEnv(gym.Env):
         self.df = df
         self.reward_range = (-1*MAX_ACCOUNT_BALANCE, MAX_ACCOUNT_BALANCE)
         self.action_space = spaces.Box(low=np.array([-1, 0]), high=np.array([1, 1]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=0, high=1, shape=(fea_num, 1), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(fea_num, 1), dtype=np.float16)
 
         self.balance = INITIAL_ACCOUNT_BALANCE
         self.position = 0.5
@@ -35,8 +35,8 @@ class TradingEnv(gym.Env):
 
         self.orderBook = self.orderBook[~self.orderBook.index.duplicated()]
 
-        self.orderBook['wp'] = self.orderBook['cf'].abs()
-
+        self.orderBook.loc[:, 'wp'] = self.orderBook['cf'].abs()
+        
         lr = np.log(self.orderBook['wp']).diff(1)
         bpd1 = np.log(self.orderBook['bp1']*self.orderBook['bv1']).diff(1)
         bpd2 = np.log(self.orderBook['bp2']*self.orderBook['bv2']).diff(1)
@@ -220,7 +220,7 @@ class TradingEnv(gym.Env):
         self.profit = 0.0
         self.profits = []
         self.sharp = 0.0
-        self.curIdx = random.randint(0, 10000)
+        self.curIdx = random.randint(0, 800000)
         self.times = self.times+1
         self.max_profit = -MAX_ACCOUNT_BALANCE
         self.max_loss = MAX_ACCOUNT_BALANCE

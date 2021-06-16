@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
-# macOS problem
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
-import gym
-import pandas as pd
-from stable_baselines3 import PPO
-# from stable_baselines3.common.policies import MlpPolicy
-from stable_baselines3.common.vec_env import DummyVecEnv
 
 from TradingEnv import TradingEnv
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3 import PPO
+import pandas as pd
+import numpy as np
+import gym
 
-dataset_dir = '/Users/tong/Downloads/bnb20_binance_normal.csv'
+# macOS problem
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+
+dataset_dir = '/Users/tong/Downloads/bnb20_binance_normal_large.csv'
 # dataset_dir = './data/eth_test.csv'
+cols = ['time', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bv1', 'bv2', 'bv3', 'bv4', 'bv5', 'ap1', 'ap2', 'ap3', 'ap4', 'ap5', 'av1', 'av2', 'av3', 'av4', 'av5', 'lp', 'lv', 'cf']
+df = pd.read_csv(dataset_dir, error_bad_lines=False, skip_blank_lines=True, usecols=cols, low_memory=False)
 
-df = pd.read_csv(dataset_dir, error_bad_lines=False, usecols=['time','bp1','bp2','bp3','bp4','bp5','bv1','bv2','bv3','bv4','bv5','ap1','ap2','ap3','ap4','ap5','av1','av2','av3','av4','av5','lp','lv','cf'])
 df = df.sort_values('time')
+df = df.dropna()
 
 env = DummyVecEnv([lambda: TradingEnv(df)])
 
 model = PPO("MlpPolicy", env, verbose=1)
-model.learn(total_timesteps=100000)
+model.learn(total_timesteps=1500000)
 
 obs = env.reset()
 
 rewardlist = []
 
-for i in range(50000):
+for i in range(500000):
     action, _states = model.predict(obs)
     # print(action)
     obs, rewards, done, info = env.step(action)
