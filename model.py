@@ -9,7 +9,7 @@ from stable_baselines3 import PPO
 # from stable_baselines3.common.policies import MlpPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from env.TradingEnv import TradingEnv
+from TradingEnv import TradingEnv
 
 dataset_dir = '/Users/tong/Downloads/bnb20_binance_normal.csv'
 # dataset_dir = './data/eth_test.csv'
