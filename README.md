@@ -9,6 +9,5 @@
 
 我要旺！
 
-<img src="img/head.jpeg" alt="head" style="width:30%;" />
-
+<img src="img/head.jpeg" alt="head" />
 
