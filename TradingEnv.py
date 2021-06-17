@@ -36,7 +36,7 @@ class TradingEnv(gym.Env):
         self.orderBook = self.orderBook[~self.orderBook.index.duplicated()]
 
         self.orderBook.loc[:, 'wp'] = self.orderBook['cf'].abs()
-        
+
         lr = np.log(self.orderBook['wp']).diff(1)
         bpd1 = np.log(self.orderBook['bp1']*self.orderBook['bv1']).diff(1)
         bpd2 = np.log(self.orderBook['bp2']*self.orderBook['bv2']).diff(1)
@@ -190,15 +190,14 @@ class TradingEnv(gym.Env):
         self.curIdx = self.curIdx+1
         self.avg_price = self.avg_price/MAX_Price
 
-        self.profit = self.unPNL + self.profit
-        # reward = self.profit
+        reward = self.unPNL + self.profit
 
-        self.profits.append(self.profit/INITIAL_ACCOUNT_BALANCE)
+        self.profits.append(reward/INITIAL_ACCOUNT_BALANCE)
         if len(self.profits) > 10:
             self.sharp = np.mean(np.array(self.profits))/np.std(np.array(self.profits))
         else:
             self.sharp = 0
-        reward = self.sharp
+        # reward = self.sharp
 
         obs = self.getobs(self.curIdx)
 
@@ -220,7 +219,7 @@ class TradingEnv(gym.Env):
         self.profit = 0.0
         self.profits = []
         self.sharp = 0.0
-        self.curIdx = random.randint(0, 800000)
+        self.curIdx = random.randint(0, 100000)
         self.times = self.times+1
         self.max_profit = -MAX_ACCOUNT_BALANCE
         self.max_loss = MAX_ACCOUNT_BALANCE
@@ -240,11 +239,10 @@ class TradingEnv(gym.Env):
         # print('-----------------------times:', times, '--------------------------')
         print('curIdx: ', curIdx)
         print('currentPrice: ', currentPrice)
-        # print(f'netWorth: {netWorth}')
-        print('Profit: ', profit)
+        print('position: ', self.position - 0.5)
+        print('profit: ', profit)
         print('sharp: ', self.sharp)
-        print('Max Profit: ', self.max_profit)
-        print('Max Loss: ', self.max_loss)
+
         print('------------------------------------------------------------------------')
 
 
