@@ -220,7 +220,7 @@ class TradingEnv(gym.Env):
         self.profits = []
         self.sharp = 0.0
         self.curIdx = random.randint(0, 100000)
-        self.times = self.times+1
+        # self.times = self.times+1
         self.max_profit = -MAX_ACCOUNT_BALANCE
         self.max_loss = MAX_ACCOUNT_BALANCE
         obs = self.getobs(self.curIdx)
@@ -229,20 +229,18 @@ class TradingEnv(gym.Env):
         return obs
 
     def render(self, mode='human', close=False):
-        currentPrice = (self.orderBook['ap1'].iloc[self.curIdx] + self.orderBook['bp1'].iloc[self.curIdx]) / 2
+        # currentPrice = (self.orderBook['ap1'].iloc[self.curIdx] + self.orderBook['bp1'].iloc[self.curIdx]) / 2
+        currentPrice = self.orderBook['lp'].iloc[self.curIdx]
         # netWorth = self.balance + self.position*self.orderBook['wp'].iloc[self.curIdx]
         # profit = netWorth - INITIAL_ACCOUNT_BALANCE
-        # sharp = self.sharp
-        curIdx = self.curIdx
-        times = self.times
+        # times = self.times
         # print('-----------------------times:', times, '--------------------------')
-        print('curIdx: ', curIdx)
+        print('curIdx: ', self.curIdx)
         print('currentPrice: ', currentPrice)
-        print('position: ', self.position - 0.5)
-        print('profit: ', self.profit)
+        print('position: ', self.position - 0.5, "    avg_price", self.avg_price)
         print('unPNL: ', self.unPNL)
+        print('profit: ', self.profit)
         print('sharp: ', self.sharp)
-
         print('------------------------------------------------------------------------')
 
 

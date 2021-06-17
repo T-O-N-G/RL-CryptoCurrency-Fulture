@@ -6,6 +6,7 @@ from stable_baselines3 import PPO
 import pandas as pd
 import numpy as np
 import gym
+import matplotlib.pyplot as plt
 
 # macOS problem
 import os
@@ -27,12 +28,14 @@ model.learn(total_timesteps=1000000)
 obs = env.reset()
 
 rewardlist = []
+pricelist = []
 
 for i in range(400000):
     action, _states = model.predict(obs)
     # print(action)
     obs, rewards, done, info = env.step(action)
     rewardlist.append(rewards)
+    pricelist.append(info)
     env.render()
 
 print("\n\nmax_profit", max(rewardlist))
