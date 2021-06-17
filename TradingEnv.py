@@ -235,12 +235,12 @@ class TradingEnv(gym.Env):
         # sharp = self.sharp
         curIdx = self.curIdx
         times = self.times
-        profit = self.unPNL + self.profit
         # print('-----------------------times:', times, '--------------------------')
         print('curIdx: ', curIdx)
         print('currentPrice: ', currentPrice)
         print('position: ', self.position - 0.5)
-        print('profit: ', profit)
+        print('profit: ', self.profit)
+        print('unPNL: ', self.unPNL)
         print('sharp: ', self.sharp)
 
         print('------------------------------------------------------------------------')

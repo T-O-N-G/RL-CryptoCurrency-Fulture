@@ -35,6 +35,8 @@ for i in range(400000):
     rewardlist.append(rewards)
     env.render()
 
+print("\n\nmax_profit", max(rewardlist))
+print("min_profit", min(rewardlist))
 model.save("models/"+str(rewards[0]))
 
 # head of csv
