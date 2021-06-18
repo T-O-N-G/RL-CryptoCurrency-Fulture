@@ -23,14 +23,14 @@ df = df.dropna()
 env = DummyVecEnv([lambda: TradingEnv(df)])
 
 model = PPO("MlpPolicy", env, verbose=1)
-model.learn(total_timesteps=500000)
-
+model.learn(total_timesteps=700000)
+model.load("models/fucking_long")
 obs = env.reset()
 
 rewardlist = []
 pricelist = []
 
-for i in range(800000):
+for i in range(200000):
     action, _states = model.predict(obs)
     # print(action)
     obs, rewards, done, info = env.step(action)

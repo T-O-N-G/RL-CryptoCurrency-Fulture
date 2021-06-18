@@ -8,7 +8,7 @@ import pandas as pd
 from gym import spaces
 
 INITIAL_ACCOUNT_BALANCE = 600
-MAX_ACCOUNT_BALANCE = 100000
+MAX_ACCOUNT_BALANCE = 8000
 MAX_Price = 1000
 fea_num = 23
 leverage = 100
@@ -21,8 +21,8 @@ class TradingEnv(gym.Env):
         super(TradingEnv, self).__init__()
         np.seterr(invalid='ignore')
         self.df = df
-        self.reward_range = (-1*MAX_ACCOUNT_BALANCE, MAX_ACCOUNT_BALANCE)
-        # self.reward_range = (-1*10, 10)      # sharp
+        # self.reward_range = (-1*MAX_ACCOUNT_BALANCE, MAX_ACCOUNT_BALANCE)
+        self.reward_range = (-1*10, 10)      # sharp
         self.action_space = spaces.Box(low=np.array([-1, 0]), high=np.array([1, 1]), dtype=np.float16)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(fea_num, 1), dtype=np.float16)
 
@@ -143,7 +143,7 @@ class TradingEnv(gym.Env):
             if cur_positon > 0:
                 self.avg_price = (cur_positon*self.avg_price + open_long_postion*askPrice)/(cur_positon+open_long_postion)
 
-            self.profit -= (close_short_position+open_long_postion)*askPrice*0.00005   # 手续费
+            self.profit -= (close_short_position+open_long_postion)*askPrice*0.00004 * leverage    # 手续费
 
         # open SHORT / sell
         elif order_side < 0:
@@ -176,7 +176,7 @@ class TradingEnv(gym.Env):
             if cur_positon < 0:
                 self.avg_price = (abs(cur_positon)*self.avg_price + open_short_postion*bidPrice)/(abs(cur_positon)+open_short_postion)
 
-            self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00005   # 手续费
+            self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00004 * leverage    # 手续费
 
         elif order_side == 0:
             pass
@@ -191,15 +191,15 @@ class TradingEnv(gym.Env):
         self.curIdx = self.curIdx+1
         self.avg_price = self.avg_price/MAX_Price
 
-        # reward = self.unPNL + self.profit
-        reward = self.profit
+        reward = self.unPNL + self.profit
+        # reward = self.profit
 
         self.profits.append(reward/INITIAL_ACCOUNT_BALANCE)
         if len(self.profits) > 10:
             self.sharp = np.mean(np.array(self.profits))/np.std(np.array(self.profits))
         else:
             self.sharp = 0
-        # reward = self.sharp
+        reward = self.sharp
 
         obs = self.getobs(self.curIdx)
 
