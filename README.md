@@ -5,7 +5,7 @@
 
 - Process of train model
 - Merge to stable-baseline3 (PyTorch)
--to-do: Need to slow down!
+- to-do: Need to slow down!
 
 
 ## 我要旺！
