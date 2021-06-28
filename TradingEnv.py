@@ -10,7 +10,7 @@ from gym import spaces
 INITIAL_ACCOUNT_BALANCE = 600
 MAX_ACCOUNT_BALANCE = 8000
 MAX_Price = 1000
-fea_num = 23
+fea_num = 33
 leverage = 100
 
 
@@ -21,8 +21,8 @@ class TradingEnv(gym.Env):
         super(TradingEnv, self).__init__()
         np.seterr(invalid='ignore')
         self.df = df
-        # self.reward_range = (-1*MAX_ACCOUNT_BALANCE, MAX_ACCOUNT_BALANCE)
-        self.reward_range = (-1*10, 10)      # sharp
+        self.reward_range = (-1*MAX_ACCOUNT_BALANCE, MAX_ACCOUNT_BALANCE)
+        # self.reward_range = (-1*10, 10)      # sharp
         self.action_space = spaces.Box(low=np.array([-1, 0]), high=np.array([1, 1]), dtype=np.float16)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(fea_num, 1), dtype=np.float16)
 
@@ -39,6 +39,17 @@ class TradingEnv(gym.Env):
         self.orderBook.loc[:, 'wp'] = self.orderBook['cf'].abs()
 
         lr = np.log(self.orderBook['wp']).diff(1)
+        bpl1 = np.log(self.orderBook['bp1']).diff(1)
+        bpl2 = np.log(self.orderBook['bp2']).diff(1)
+        bpl3 = np.log(self.orderBook['bp3']).diff(1)
+        bpl4 = np.log(self.orderBook['bp4']).diff(1)
+        bpl5 = np.log(self.orderBook['bp5']).diff(1)
+        apl1 = np.log(self.orderBook['ap1']).diff(1)
+        apl2 = np.log(self.orderBook['ap2']).diff(1)
+        apl3 = np.log(self.orderBook['ap3']).diff(1)
+        apl4 = np.log(self.orderBook['ap4']).diff(1)
+        apl5 = np.log(self.orderBook['ap5']).diff(1)
+
         bpd1 = np.log(self.orderBook['bp1']*self.orderBook['bv1']).diff(1)
         bpd2 = np.log(self.orderBook['bp2']*self.orderBook['bv2']).diff(1)
         bpd3 = np.log(self.orderBook['bp3']*self.orderBook['bv3']).diff(1)
@@ -62,6 +73,17 @@ class TradingEnv(gym.Env):
         cf5 = self.orderBook['cf'].rolling(5).sum()
 
         lr = self.scale(lr, 5)
+        bpl1 = self.scale(bpl1, 10)
+        bpl2 = self.scale(bpl2, 10)
+        bpl3 = self.scale(bpl3, 10)
+        bpl4 = self.scale(bpl4, 10)
+        bpl5 = self.scale(bpl5, 10)
+        apl1 = self.scale(apl1, 10)
+        apl2 = self.scale(apl2, 10)
+        apl3 = self.scale(apl3, 10)
+        apl4 = self.scale(apl4, 10)
+        apl5 = self.scale(apl5, 10)
+
         bpd1 = self.scale(bpd1, 10)
         bpd2 = self.scale(bpd2, 10)
         bpd3 = self.scale(bpd3, 10)
@@ -83,8 +105,9 @@ class TradingEnv(gym.Env):
         cf4 = self.scale(cf4, 10)
         cf5 = self.scale(cf5, 10)
 
-        self.fea = pd.DataFrame([lr, bpd1, bpd2, bpd3, bpd4, bpd5, apd1, apd2, apd3, apd4, apd5, s1, s2, s3, s4, s5, cf, cf2, cf3, cf4, cf5], index=['lr', 'bpd1', 'bpd2',
-                                                                                                                                                     'bpd3', 'bpd4', 'bpd5', 'apd1', 'apd2', 'apd3', 'apd4', 'apd5', 's1', 's2', 's3', 's4', 's5', 'cf', 'cf2', 'cf3', 'cf4', 'cf5']).T.dropna()
+        self.fea = pd.DataFrame([lr, bpl1, bpl2, bpl3, bpl4, bpl5, apl1, apl2, apl3, apl4, apl5, bpd1, bpd2, bpd3, bpd4, bpd5, apd1, apd2, apd3, apd4, apd5, s1, s2, s3, s4, s5, cf, cf2, cf3, cf4, cf5], index=['lr', 'bpl1', 'bpl2',
+                                                                                                                                                                                                                 'bpl3', 'bpl4', 'bpl5', 'apl1', 'apl2', 'apl3', 'apl4', 'apl5', 'bpd1', 'bpd2',
+                                                                                                                                                                                                                 'bpd3', 'bpd4', 'bpd5', 'apd1', 'apd2', 'apd3', 'apd4', 'apd5', 's1', 's2', 's3', 's4', 's5', 'cf', 'cf2', 'cf3', 'cf4', 'cf5']).T.dropna()
         self.orderBook = self.orderBook.loc[self.fea.index, :]
         print('load data down')
 
@@ -143,7 +166,7 @@ class TradingEnv(gym.Env):
             if cur_positon > 0:
                 self.avg_price = (cur_positon*self.avg_price + open_long_postion*askPrice)/(cur_positon+open_long_postion)
 
-            self.profit -= (close_short_position+open_long_postion)*askPrice*0.00004 * leverage    # 手续费
+            # self.profit -= (close_short_position+open_long_postion)*askPrice*0.00004 * leverage    # 手续费
 
         # open SHORT / sell
         elif order_side < 0:
@@ -176,7 +199,7 @@ class TradingEnv(gym.Env):
             if cur_positon < 0:
                 self.avg_price = (abs(cur_positon)*self.avg_price + open_short_postion*bidPrice)/(abs(cur_positon)+open_short_postion)
 
-            self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00004 * leverage    # 手续费
+            # self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00004 * leverage    # 手续费
 
         elif order_side == 0:
             pass
@@ -192,25 +215,25 @@ class TradingEnv(gym.Env):
         self.avg_price = self.avg_price/MAX_Price
 
         reward = self.unPNL + self.profit
-        # reward = self.profit
+        reward = self.profit
 
         self.profits.append(reward/INITIAL_ACCOUNT_BALANCE)
         if len(self.profits) > 10:
             self.sharp = np.mean(np.array(self.profits))/np.std(np.array(self.profits))
         else:
             self.sharp = 0
-        reward = self.sharp
+        # reward = self.sharp
 
         obs = self.getobs(self.curIdx)
 
-        if self.profit > self.max_profit:
-            self.max_profit = self.profit
-        if self.profit < self.max_loss:
-            self.max_loss = self.profit
+        # if self.profit > self.max_profit:
+        #     self.max_profit = self.profit
+        # if self.profit < self.max_loss:
+        #     self.max_loss = self.profit
 
         # done = reward < -1*INITIAL_ACCOUNT_BALANCE/5 or reward > MAX_ACCOUNT_BALANCE-INITIAL_ACCOUNT_BALANCE or self.curIdx > (len(self.fea)-10)
         done = self.curIdx > (len(self.fea)-10)
-        return obs, reward, done, {"price": self.orderBook.iloc[self.curIdx]["lp"], "profit": self.profit+self.unPNL}
+        return obs, reward, done, {"price": self.orderBook.iloc[self.curIdx]["lp"], "profit": self.profit+self.unPNL, "position": self.position}
 
     def reset(self):
         # Reset the state of the environment to an initial state
@@ -221,10 +244,10 @@ class TradingEnv(gym.Env):
         self.profit = 0.0
         self.profits = []
         self.sharp = 0.0
-        self.curIdx = random.randint(0, 700000)
+        self.curIdx = random.randint(0, 70000)
         # self.times = self.times+1
-        self.max_profit = -MAX_ACCOUNT_BALANCE
-        self.max_loss = MAX_ACCOUNT_BALANCE
+        # self.max_profit = -MAX_ACCOUNT_BALANCE
+        # self.max_loss = MAX_ACCOUNT_BALANCE
         obs = self.getobs(self.curIdx)
         # if self.times > 5:
         #     print('-------------------', self.times, ': sharp=,', self.sharp, '---------------------')
