@@ -126,7 +126,8 @@ class TradingEnv(gym.Env):
         order_size = action[1]
         bidPrice = self.orderBook.iloc[self.curIdx]["bp1"]   # sell
         askPrice = self.orderBook.iloc[self.curIdx]["ap1"]   # buy
-        markPrice = self.orderBook.iloc[self.curIdx]["lp"]
+        # markPrice = self.orderBook.iloc[self.curIdx]["lp"]
+        markPrice = (askPrice+bidPrice)/2
         self.avg_price = self.avg_price*MAX_Price
         cur_positon = self.position - 0.5
         close_long_position = 0.0
@@ -166,7 +167,7 @@ class TradingEnv(gym.Env):
             if cur_positon > 0:
                 self.avg_price = (cur_positon*self.avg_price + open_long_postion*askPrice)/(cur_positon+open_long_postion)
 
-            # self.profit -= (close_short_position+open_long_postion)*askPrice*0.00004 * leverage    # 手续费
+            self.profit -= (close_short_position+open_long_postion)*askPrice*0.00004 * leverage    # 手续费
 
         # open SHORT / sell
         elif order_side < 0:
@@ -199,23 +200,23 @@ class TradingEnv(gym.Env):
             if cur_positon < 0:
                 self.avg_price = (abs(cur_positon)*self.avg_price + open_short_postion*bidPrice)/(abs(cur_positon)+open_short_postion)
 
-            # self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00004 * leverage    # 手续费
+            self.profit -= (close_short_position+open_short_postion)*bidPrice*0.00004 * leverage    # 手续费
 
         elif order_side == 0:
             pass
 
         if next_position > 0:
-            self.unPNL = (markPrice - self.avg_price) * next_position * leverage
+            self.unPNL = (bidPrice - self.avg_price) * next_position * leverage
 
         if next_position < 0:
-            self.unPNL = (self.avg_price - markPrice) * abs(next_position) * leverage
+            self.unPNL = (self.avg_price - askPrice) * abs(next_position) * leverage
 
         self.position = next_position + 0.5
         self.curIdx = self.curIdx+1
         self.avg_price = self.avg_price/MAX_Price
 
         reward = self.unPNL + self.profit
-        reward = self.profit
+        # reward = self.profit
 
         self.profits.append(reward/INITIAL_ACCOUNT_BALANCE)
         if len(self.profits) > 10:
@@ -233,7 +234,7 @@ class TradingEnv(gym.Env):
 
         # done = reward < -1*INITIAL_ACCOUNT_BALANCE/5 or reward > MAX_ACCOUNT_BALANCE-INITIAL_ACCOUNT_BALANCE or self.curIdx > (len(self.fea)-10)
         done = self.curIdx > (len(self.fea)-10)
-        return obs, reward, done, {"price": self.orderBook.iloc[self.curIdx]["lp"], "profit": self.profit+self.unPNL, "position": self.position}
+        return obs, reward, done, {"price": markPrice, "profit": self.profit+self.unPNL, "position": self.position}
 
     def reset(self):
         # Reset the state of the environment to an initial state
@@ -254,18 +255,21 @@ class TradingEnv(gym.Env):
         return obs
 
     def render(self, mode='human', close=False):
-        # currentPrice = (self.orderBook['ap1'].iloc[self.curIdx] + self.orderBook['bp1'].iloc[self.curIdx]) / 2
-        currentPrice = self.orderBook.iloc[self.curIdx]['lp']
+        markPrice = (self.orderBook['ap1'].iloc[self.curIdx] + self.orderBook['bp1'].iloc[self.curIdx]) / 2
+        # markPrice = self.orderBook.iloc[self.curIdx]['lp']
         # netWorth = self.balance + self.position*self.orderBook['wp'].iloc[self.curIdx]
         # profit = netWorth - INITIAL_ACCOUNT_BALANCE
         # times = self.times
         # print('-----------------------times:', times, '--------------------------')
         print('curIdx: ', self.curIdx)
-        print('currentPrice: ', currentPrice)
-        print('position: ', 10*(self.position - 0.5), " \tavg_price", self.avg_price*MAX_Price)
-        print('unPNL: ', self.unPNL)
-        print('profit: ', self.profit)
-        print('sharp: ', self.sharp)
+        print('markPrice: %.4f' % markPrice)
+        if self.position - 0.5>=0:
+            print('position: \033[1;32m %.4f \033[0m\tavg_price: %.4f' % (self.position - 0.5, self.avg_price*MAX_Price))
+        else:
+            print('position: \033[1;31m %.4f \033[0m\tavg_price: %.4f' % (self.position - 0.5, self.avg_price*MAX_Price))
+        print('unPNL: %.4f' % self.unPNL)
+        print('profit: %.4f' % self.profit)
+        print('sharp: %.4f' % self.sharp)
         print('------------------------------------------------------------------------')
 
 

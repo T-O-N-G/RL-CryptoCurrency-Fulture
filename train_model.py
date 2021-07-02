@@ -23,7 +23,7 @@ df = df.dropna()
 env = DummyVecEnv([lambda: TradingEnv(df)])
 
 model = PPO("MlpPolicy", env, verbose=1)
-model.learn(total_timesteps=30000)
+model.learn(total_timesteps=47000)
 # model.load("models/fucking_long")
 obs = env.reset()
 
@@ -32,18 +32,31 @@ pricelist = []
 pricelistL = []
 pricelistS = []
 
-for i in range(20000):
+for i in range(3000):
     action, _states = model.predict(obs)
     # print(action)
     obs, rewards, done, info = env.step(action)
     rewardlist.append(info[0]["profit"])
-    pricelist.append(info[0]["price"])
-    # if info[0]["position"]>0.5:
-    #     pricelistL.append(info[0]["price"])
-    #     pricelistS.append(pricelist[0])
-    # else:
-    #     pricelistS.append(info[0]["price"])
-    #     pricelistL.append(pricelist[0])
+    # pricelist.append(info[0]["price"])
+    if info[0]["position"] > 0.5:
+        pricelistL.append(info[0]["price"])
+        pricelistS.append(None)
+        pricelist.append(None)
+
+    elif info[0]["position"] < 0.5:
+        pricelistS.append(info[0]["price"])
+        pricelistL.append(None)
+        pricelist.append(None)
+    else:
+        pricelist.append(info[0]["price"])
+        pricelistL.append(None)
+        pricelistS.append(None)
+
+    # print("action: %.4f     position: %.4f" % (action[0][0], action[0][1]))
+    if action[0][0] >= 0:
+        print("action: \033[1;32m %.4f \033[0m " % action[0][1])
+    else:
+        print("action: \033[1;31m %.4f \033[0m " % action[0][1])
     env.render()
 
 print("\n")
@@ -52,9 +65,9 @@ print("min_profit", min(rewardlist))
 model.save("models/"+str(rewards[0]))
 
 fig, (ax1, ax2) = plt.subplots(2, 1)
-ax1.plot(range(len(pricelist)), pricelist)
-# ax1.plot(range(len(pricelist)), pricelistL)
-# ax1.plot(range(len(pricelist)), pricelistS)
+ax1.plot(range(len(pricelist)), pricelist, color='black')
+ax1.plot(range(len(pricelist)), pricelistL, color='green')
+ax1.plot(range(len(pricelist)), pricelistS, color='red')
 ax1.set_title("price")
 ax2.plot(range(len(rewardlist)), rewardlist)
 ax2.set_title("profit")
