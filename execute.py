@@ -9,45 +9,51 @@ from binance_f.base.printobject import *
 logger = logging.getLogger("binance-futures")
 logger.setLevel(level=logging.INFO)
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
 sub_client = SubscriptionClient(api_key=g_api_key, secret_key=g_secret_key)
 line_ticker = ""
 ticker_last_price = 0.0
-
 line_depth = ""
 eventTime = ""
+orderbooks = []
+ticker = []
+depth = []
+# orderbook = []
+time_type = []
+
 # https://oapi.dingtalk.com/robot/send?access_token=8bd78539539ee4fe42e671be13287813802dddaad79d0bad0b1e268883aec156
+
 
 def callback(data_type: 'SubscribeMessageType', event: 'any'):
     global line_ticker
     global line_depth
     global eventTime
     global ticker_last_price
-
-    orderbooks = []
-    ticker = []
-    depth = []
-    orderbook = []
-    time_type = []
+    global orderbooks
+    global ticker
+    global depth
+    # global orderbook
+    global time_type
 
     if data_type == SubscribeMessageType.RESPONSE:
         print("Event ID: ", event)
     elif data_type == SubscribeMessageType.PAYLOAD:
-        orderbook.clear()
-
+        orderbook=[]
         if event.eventType == "24hrTicker":
-            ticker.clear()
-            line_ticker = "Ticker," + str(event.lastPrice) + "," + str(event.lastQty) + ","
-            ticker.append("Ticker", event.lastPrice, event.lastQty)
-           
+            ticker=[]
+            line_ticker = "Ticker," + \
+                str(event.lastPrice) + "," + str(event.lastQty) + ","
+            ticker.extend(["Ticker", event.lastPrice, event.lastQty])
+
             if ticker_last_price > event.lastPrice:
                 line_ticker += str(event.lastPrice * event.lastQty * -1)
                 ticker.append(event.lastPrice * event.lastQty * -1)
             else:
                 line_ticker += str(event.lastPrice * event.lastQty)
-                ticker.append(event.lastPrice * event.lastQty )
+                ticker.append(event.lastPrice * event.lastQty)
 
             eventTime = str(event.eventTime) + ",ticker_update,"
             time_type = [event.eventTime, "ticker_update"]
@@ -55,7 +61,7 @@ def callback(data_type: 'SubscribeMessageType', event: 'any'):
             ticker_last_price = event.lastPrice
 
         if event.eventType == "depthUpdate":
-            depth.clear()
+            depth=[]
             line_depth = "Depth,"
             depth.append("Depth")
 
@@ -80,13 +86,15 @@ def callback(data_type: 'SubscribeMessageType', event: 'any'):
         orderbook.extend(depth)
         orderbook.extend(ticker)
 
-        if len(orderbooks)>5:
+        if len(orderbooks)>10:
             orderbooks.pop(0)
         orderbooks.append(orderbook)
+        
+        for i in range(len(orderbooks)):
+            print(orderbooks[i][0])
+
     else:
         print("Unknown Data:")
-        
-    print(orderbooks)
 
 
 def error(e: 'BinanceApiException'):
@@ -94,5 +102,6 @@ def error(e: 'BinanceApiException'):
 
 
 sub_client.subscribe_symbol_ticker_event("bnbusdt", callback, error)
-sub_client.subscribe_book_depth_event("bnbusdt", 20, callback, error, update_time=UpdateTime.NORMAL)
+sub_client.subscribe_book_depth_event(
+    "bnbusdt", 20, callback, error, update_time=UpdateTime.NORMAL)
 # sub_client.subscribe_book_depth_event("bnbusdt",20,callback,error,update_time="@250ms")
